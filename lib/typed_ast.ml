@@ -21,6 +21,7 @@ and t_expr_desc =
   | TE_tuple of t_expr list
   | TE_merge of t_expr list
   | TE_when of t_expr * t_expr
+  | TE_reset of t_expr
 
 type t_patt =
     { tpatt_desc: Ident.t list;

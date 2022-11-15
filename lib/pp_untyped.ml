@@ -27,6 +27,7 @@ and pp_expr_desc out e =
   |PE_arrow(e1,e2)->fprintf out "%a -> %a" pp_expr e1 pp_expr e2
   |PE_pre e -> fprintf out "pre %a" pp_expr e
   |PE_when (e1,e2) -> fprintf out "%a when %a" pp_expr e1 pp_expr e2
+  |PE_reset e -> fprintf out "reset %a" pp_expr e
   |PE_tuple l->begin
     match l with 
     |[]-> fprintf out "()"

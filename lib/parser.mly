@@ -49,6 +49,7 @@
 %token VAR
 %token MERGE
 %token WHEN
+%token RESET
 %token TYPE
 
 
@@ -76,10 +77,10 @@ file:
     {const_decl=l_c;nodes=l_n}
  }
 
-
+/* 
 type_decl:
 | TYPE id=IDENT EQUAL ty=typ SEMICOL
-    {{typ_name=id;typ_ty=ty;typ_loc=loc()}}
+    {{typ_name=id;typ_ty=ty;typ_loc=loc()}} */
 
 const_decl:
 | CONST id=IDENT EQUAL c=const SEMICOL 
@@ -214,6 +215,8 @@ expr:
     {mk_expr (PE_merge(l))}
 | e1=expr WHEN e2=expr 
     {mk_expr (PE_when (e1,e2))}  
+| RESET e=expr
+    {mk_expr (PE_reset e)}
 ;
 
 const:

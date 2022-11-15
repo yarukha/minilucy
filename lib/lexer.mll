@@ -31,7 +31,8 @@
 	"true", CONST_BOOL(true);
 	"var", VAR;
     "merge", MERGE;
-    "when", WHEN
+    "when", WHEN;
+    "reset", RESET
       ];
     fun s ->
       try Hashtbl.find h s with Not_found -> IDENT s

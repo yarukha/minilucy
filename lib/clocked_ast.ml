@@ -26,6 +26,7 @@ and c_expr_desc =
   | CE_tuple of c_expr list  
   | CE_merge of c_expr list
   | CE_when of c_expr * c_expr
+  | CE_reset of c_expr
 
 type c_patt =
     { cpatt_desc: Ident.t list;

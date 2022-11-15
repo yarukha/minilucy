@@ -25,7 +25,7 @@ and p_expr_desc =
   | PE_tuple of p_expr list
   | PE_merge of p_expr list
   | PE_when of p_expr * p_expr
-
+  | PE_reset of p_expr 
 
 type p_patt =
   { ppatt_desc: p_patt_desc;
