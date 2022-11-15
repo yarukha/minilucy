@@ -1,6 +1,6 @@
 open! Parser
 open Lexer 
-open! Parse_ast
+open! Untyped_ast
 
 
 let report_loc file (b,e) =

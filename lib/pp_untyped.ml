@@ -1,28 +1,15 @@
 open Asttypes
-open Parse_ast
+open Untyped_ast
 open Format
 
 let pp_ident out = 
   fprintf out "%s"
 
 
-let pp_const out = 
-  function 
-  |Cbool b -> fprintf out "%b" b
-  |Cint i -> fprintf out "%i" i
-  |Creal r -> fprintf out "%f" r
-
-let pp_base_ty out ty = 
-  fprintf out "%s" (match ty with |Tbool ->"bool"|Tint->"int"|Treal->"real")
+let pp_const_decl out c = 
+  fprintf out "const %a = %a;" pp_ident c.const_name pp_const c.const_value
 
 
-let pp_op out op= 
-  fprintf out "%s" 
-  (match op with 
-  |Op_eq->"="|Op_neq->"!="|Op_lt->"<"|Op_le->"<="|Op_gt->">"|Op_ge->">="
-  |Op_add->"+"
-  |_->failwith "unknown operator"
-  ) 
 
 let rec pp_expr out e = 
   pp_expr_desc out e.pexpr_desc
@@ -39,7 +26,7 @@ and pp_expr_desc out e =
   |PE_app(id,l)->fprintf out "%a %a" pp_ident id pp_expr_desc (PE_tuple l)
   |PE_arrow(e1,e2)->fprintf out "%a -> %a" pp_expr e1 pp_expr e2
   |PE_pre e -> fprintf out "pre %a" pp_expr e
-  |PE_reset e -> fprintf out "reset %a" pp_expr e
+  |PE_when (e1,e2) -> fprintf out "%a when %a" pp_expr e1 pp_expr e2
   |PE_tuple l->begin
     match l with 
     |[]-> fprintf out "()"
@@ -67,9 +54,9 @@ let pp_equation out eq =
 
 
 let pp_node out n = 
-  let rec pp_var_decl out' = 
-    function |[]->()|[id,ty]->fprintf out' "%a: %a" pp_ident id pp_base_ty ty
-    |(id,ty)::q->fprintf out' "%a: %a, %a" pp_ident id pp_base_ty ty pp_var_decl q
+  let rec pp_var_decl out' :(ident*ty) list -> unit= 
+    function |[]->()|[id,ty]->fprintf out' "%a: %a" pp_ident id pp_ty ty
+    |(id,ty)::q->fprintf out' "%a: %a, %a" pp_ident id pp_ty ty pp_var_decl q
   in
   let rec pp_eq_list out' = 
     function |[]->()|x::q->fprintf out' "\t%a;\n%a" pp_equation x pp_eq_list q
@@ -77,5 +64,6 @@ let pp_node out n =
   fprintf out "node %a (%a) returns (%a);\nvar %a;\n" pp_ident n.pn_name pp_var_decl n.pn_input pp_var_decl n.pn_output pp_var_decl n.pn_local;
   fprintf out "let\n%atel\n" pp_eq_list n.pn_equs
 
-let rec pp_file out = 
-  function |[]->() |x::q->fprintf out "%a\n%a" pp_node x pp_file q
+let pp_file out f = 
+  List.iter (fprintf out "%a\n" pp_const_decl) f.const_decl;
+  List.iter (fprintf out "%a\n" pp_node) f.nodes

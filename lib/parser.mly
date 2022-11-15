@@ -1,7 +1,7 @@
 %{
 
   open Asttypes
-  open Parse_ast
+  open Untyped_ast
 
   let loc () = Parsing.symbol_start_pos (), Parsing.symbol_end_pos ()
   let mk_expr e = { pexpr_desc = e; pexpr_loc = loc () }
@@ -48,7 +48,8 @@
 %token THEN
 %token VAR
 %token MERGE
-%token RESET
+%token WHEN
+%token TYPE
 
 
 %nonassoc ELSE
@@ -66,20 +67,26 @@
 /* Point d'entr�e */
 
 %start file
-%type <Parse_ast.p_file> file
+%type <Untyped_ast.p_file> file
 
 %%
 
-file: node_decs EOF { $1 }
-;
-
-node_decs:
-| /* empty */       { [] }
-| node node_decs    { $1 :: $2 }
-;
+file: 
+|l_c=list(const_decl) l_n=list(node_decl) EOF { 
+    {const_decl=l_c;nodes=l_n}
+ }
 
 
-node:
+type_decl:
+| TYPE id=IDENT EQUAL ty=typ SEMICOL
+    {{typ_name=id;typ_ty=ty;typ_loc=loc()}}
+
+const_decl:
+| CONST id=IDENT EQUAL c=const SEMICOL 
+    {{const_name=id;const_value=c;const_loc=loc()}}
+
+
+node_decl:
 | NODE IDENT LPAREN in_params RPAREN
   RETURNS LPAREN out_params RPAREN SEMICOL
   local_params
@@ -155,8 +162,8 @@ pattern:
 expr:
 | LPAREN expr RPAREN
     { $2 }
-| const
-    { $1 }
+| c=const
+    { mk_expr (PE_const c) }
 | IDENT
     { mk_expr (PE_ident $1)}
 | IDENT LPAREN expr_comma_list_empty RPAREN
@@ -205,17 +212,17 @@ expr:
     { mk_expr (PE_tuple ($2::$4)) }
 | MERGE l=list(expr)
     {mk_expr (PE_merge(l))}
-| RESET e=expr 
-    {mk_expr (PE_reset e)}
+| e1=expr WHEN e2=expr 
+    {mk_expr (PE_when (e1,e2))}  
 ;
 
 const:
 | CONST_BOOL
-    { mk_expr (PE_const (Cbool $1)) }
+    { Cbool $1 }
 | CONST_INT
-    { mk_expr (PE_const (Cint $1)) }
+    { Cint $1 }
 | CONST_REAL
-    { mk_expr (PE_const (Creal $1)) }
+    { Creal $1 }
 ;
 
 ident_comma_list:
@@ -236,9 +243,9 @@ expr_comma_list:
 ;
 
 typ:
-| BOOL   { Tbool }
-| INT    { Tint }
-| REAL   { Treal }
+| BOOL   {[Tbool] }
+| INT    {[Tint]}
+| REAL   {[Treal] }
 ;
 
 semi_opt:
